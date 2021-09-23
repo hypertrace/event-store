@@ -27,28 +27,27 @@ import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.hypertrace.core.eventstore.ConsumerState;
 import org.hypertrace.core.eventstore.EventConsumer;
 import org.hypertrace.core.eventstore.EventConsumerConfig;
+import org.hypertrace.core.eventstore.KeyValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Implementation of Kafka Event Consumer wrapped with Consumer in Kafka Client library.
- */
-public class KafkaEventConsumer<T> implements EventConsumer<T> {
+/** Implementation of Kafka Event Consumer wrapped with Consumer in Kafka Client library. */
+public class KafkaEventConsumer<K, V> implements EventConsumer<K, V> {
   private static final Logger LOGGER = LoggerFactory.getLogger(KafkaEventConsumer.class);
   private static final Duration DEFAULT_MAX_POLL_TIME = Duration.ofSeconds(30);
   private static final String TOPIC_NAME = "topic.name";
 
-  private Consumer<byte[], T> consumer;
+  private Consumer<K, V> consumer;
   private String topic;
 
   private static Config getDefaultKafkaConsumerConfigs() {
     Map<String, String> defaultKafkaConsumerConfigMap = new HashMap<>();
     String groupID = "KafkaEventConsumer-" + UUID.randomUUID().toString();
     defaultKafkaConsumerConfigMap.put(ConsumerConfig.GROUP_ID_CONFIG, groupID);
-    defaultKafkaConsumerConfigMap.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-        ByteArrayDeserializer.class.getName());
-    defaultKafkaConsumerConfigMap.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-        ByteArrayDeserializer.class.getName());
+    defaultKafkaConsumerConfigMap.put(
+        ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
+    defaultKafkaConsumerConfigMap.put(
+        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
     defaultKafkaConsumerConfigMap.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "1000");
     defaultKafkaConsumerConfigMap.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
     defaultKafkaConsumerConfigMap.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
@@ -59,9 +58,9 @@ public class KafkaEventConsumer<T> implements EventConsumer<T> {
   public boolean init(EventConsumerConfig config) {
     Config configs = config.getSourceConfig();
     this.topic = configs.getString(TOPIC_NAME);
-    Properties props = getKafkaConsumerConfigs(
-        configs.withFallback(getDefaultKafkaConsumerConfigs()));
-    Consumer<byte[], T> consumer = new KafkaConsumer<>(props);
+    Properties props =
+        getKafkaConsumerConfigs(configs.withFallback(getDefaultKafkaConsumerConfigs()));
+    Consumer<K, V> consumer = new KafkaConsumer<>(props);
     consumer.subscribe(Collections.singletonList(topic));
     this.consumer = consumer;
     return false;
@@ -79,22 +78,21 @@ public class KafkaEventConsumer<T> implements EventConsumer<T> {
     return props;
   }
 
-
   @Override
-  public T[] poll() {
+  public List<KeyValuePair<K, V>> poll() {
     return this.poll(DEFAULT_MAX_POLL_TIME);
   }
 
   @Override
-  public T[] poll(Duration maxWaitTime) {
-    ConsumerRecords<byte[], T> records = consumer.poll(maxWaitTime);
-    List<T> res = new ArrayList<T>(records.count());
-    Iterator<ConsumerRecord<byte[], T>> iterator = records.iterator();
+  public List<KeyValuePair<K, V>> poll(Duration maxWaitTime) {
+    ConsumerRecords<K, V> records = consumer.poll(maxWaitTime);
+    List<KeyValuePair<K, V>> res = new ArrayList<>(records.count());
+    Iterator<ConsumerRecord<K, V>> iterator = records.iterator();
     while (iterator.hasNext()) {
-      ConsumerRecord<byte[], T> record = iterator.next();
-      res.add(record.value());
+      ConsumerRecord<K, V> record = iterator.next();
+      res.add(new KeyValuePair(record.key(), record.value()));
     }
-    return (T[]) res.toArray();
+    return res;
   }
 
   /*
@@ -110,8 +108,8 @@ public class KafkaEventConsumer<T> implements EventConsumer<T> {
       OffsetAndMetadata om = new OffsetAndMetadata(this.consumer.position(tp));
       topicPartitionOffsetAndMetadataMap.put(tp, om);
     }
-    LOGGER.info("getState: {}",
-        Arrays.toString(topicPartitionOffsetAndMetadataMap.entrySet().toArray()));
+    LOGGER.info(
+        "getState: {}", Arrays.toString(topicPartitionOffsetAndMetadataMap.entrySet().toArray()));
     return new KafkaConsumerState(topicPartitionOffsetAndMetadataMap);
   }
 
@@ -123,9 +121,10 @@ public class KafkaEventConsumer<T> implements EventConsumer<T> {
   @Override
   public boolean checkpoint(ConsumerState consumerState) {
     if (consumerState != null) {
-      Map<TopicPartition, OffsetAndMetadata> topicPartitionOffsetAndMetadataMap = ((KafkaConsumerState) consumerState)
-          .getTopicPartitionOffsetAndMetadataMap();
-      LOGGER.debug("checkpoint: {}",
+      Map<TopicPartition, OffsetAndMetadata> topicPartitionOffsetAndMetadataMap =
+          ((KafkaConsumerState) consumerState).getTopicPartitionOffsetAndMetadataMap();
+      LOGGER.debug(
+          "checkpoint: {}",
           Arrays.toString(topicPartitionOffsetAndMetadataMap.entrySet().toArray()));
       this.consumer.commitSync(topicPartitionOffsetAndMetadataMap);
       return true;

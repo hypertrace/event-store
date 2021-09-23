@@ -12,15 +12,16 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.hypertrace.core.eventstore.EventProducer;
 import org.hypertrace.core.eventstore.EventProducerConfig;
+import org.hypertrace.core.eventstore.KeyValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class KafkaEventProducer<T> implements EventProducer<T> {
+public class KafkaEventProducer<K, V> implements EventProducer<K, V> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(KafkaEventProducer.class);
   private static final String TOPIC_NAME = "topic.name";
 
-  private Producer<byte[], T> producer;
+  private Producer<K, V> producer;
   private String topic;
 
   @Override
@@ -32,30 +33,24 @@ public class KafkaEventProducer<T> implements EventProducer<T> {
       producerConfig.put(key, config.getConfig().getString(key));
     }
     this.topic = config.getConfig().getString(TOPIC_NAME);
-    LOGGER.info("Get init configs for producer: {}",
-        Arrays.toString(producerConfig.entrySet().toArray()));
+    LOGGER.info(
+        "Get init configs for producer: {}", Arrays.toString(producerConfig.entrySet().toArray()));
     producer = new KafkaProducer<>(producerConfig);
   }
 
   @Override
-  public void send(T buffer) {
-    producer.send(new ProducerRecord<>(this.topic, buffer));
-
-  }
-
-  /**
-   * @param buffer    message payload
-   * @param timestamp record timestamp to set explicitly
-   */
-  public void send(T buffer, long timestamp) {
-    producer.send(new ProducerRecord<>(this.topic, null, timestamp, null, buffer));
+  public void send(K key, V value) {
+    producer.send(new ProducerRecord<>(this.topic, key, value));
   }
 
   @Override
-  public void batchSend(List<T> bufferList) {
-    for (T buffer : bufferList) {
-      send(buffer);
-    }
+  public void send(K key, V value, long timestamp) {
+    producer.send(new ProducerRecord<>(this.topic, null, timestamp, key, value));
+  }
+
+  @Override
+  public void batchSend(List<KeyValuePair<K, V>> events) {
+    events.forEach(entry -> this.send(entry.getKey(), entry.getValue()));
   }
 
   @Override

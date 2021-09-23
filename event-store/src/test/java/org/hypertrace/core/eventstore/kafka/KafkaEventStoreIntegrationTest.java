@@ -17,6 +17,7 @@ import org.hypertrace.core.eventstore.EventProducer;
 import org.hypertrace.core.eventstore.EventProducerConfig;
 import org.hypertrace.core.eventstore.EventStore;
 import org.hypertrace.core.eventstore.EventStoreConfig;
+import org.hypertrace.core.eventstore.KeyValuePair;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -26,8 +27,8 @@ import org.slf4j.LoggerFactory;
 
 public class KafkaEventStoreIntegrationTest {
 
-  private static final Logger LOGGER = LoggerFactory
-      .getLogger(KafkaEventStoreIntegrationTest.class);
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(KafkaEventStoreIntegrationTest.class);
 
   private static final long STABILIZE_SLEEP_DELAYS = 3000;
   private static final String TEST_TOPIC_1 = "foo";
@@ -67,8 +68,8 @@ public class KafkaEventStoreIntegrationTest {
     configMap.put(TOPIC_NAME, topic);
     configMap.put(ProducerConfig.CLIENT_ID_CONFIG, "KafkaEventProducer-" + UUID.randomUUID());
     configMap.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-    configMap
-        .put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
+    configMap.put(
+        ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
     return new EventProducerConfig("kafka", ConfigFactory.parseMap(configMap));
   }
 
@@ -94,37 +95,40 @@ public class KafkaEventStoreIntegrationTest {
     for (int i = 0; i < numTopics; i++) {
       String testTopic = "testTopicCreationDeletion-" + i;
       kafkaEventStore.deleteTopic(testTopic);
-      Assertions.assertEquals(kafkaEventStore.listTopics().size(), existedTopics + numTopics - i - 1);
+      Assertions.assertEquals(
+          kafkaEventStore.listTopics().size(), existedTopics + numTopics - i - 1);
     }
   }
 
   @Disabled
   public void testSingleEventProducerConsumer() {
     // Create Producer
-    EventProducer<byte[]> producer = kafkaEventStore.createProducer(TEST_TOPIC_1,
-        getEventProducerConfig(TEST_TOPIC_1));
+    EventProducer<byte[], byte[]> producer =
+        kafkaEventStore.createProducer(TEST_TOPIC_1, getEventProducerConfig(TEST_TOPIC_1));
     // Create Consumer
-    EventConsumer<byte[]> consumer = kafkaEventStore.createConsumer(TEST_TOPIC_1,
-        getEventConsumerConfig(TEST_TOPIC_1));
+    EventConsumer<byte[], byte[]> consumer =
+        kafkaEventStore.createConsumer(TEST_TOPIC_1, getEventConsumerConfig(TEST_TOPIC_1));
 
     int numMsgToProduce = 100;
     List<String> producedMsg = new ArrayList<>();
     for (int i = 0; i < numMsgToProduce; i++) {
       String uuidStr = UUID.randomUUID().toString();
-      producer.send(uuidStr.getBytes());
+      producer.send(uuidStr.getBytes(), uuidStr.getBytes());
       // LOGGER.info("Produced: {} ", uuidStr);
       producedMsg.add(uuidStr);
     }
     producer.flush();
 
-    Object[] recordsBytes = consumer.poll();
     int i = 0;
     while (i < numMsgToProduce) {
-      for (Object recordBytes : recordsBytes) {
-        String consumedStr = new String((byte[]) recordBytes);
+      List<KeyValuePair<byte[], byte[]>> records = consumer.poll();
+      for (KeyValuePair<byte[], byte[]> record : records) {
+        String key = new String(record.getKey());
+        String value = new String(record.getValue());
         String expected = producedMsg.get(i++);
-        LOGGER.debug("i: {}, actual = {}, expected = {}", i, consumedStr, expected);
-        Assertions.assertEquals(consumedStr, expected);
+        LOGGER.debug("i: {}, key = {}, value = {}, expected = {}", i, key, value, expected);
+        Assertions.assertEquals(key, expected);
+        Assertions.assertEquals(value, expected);
       }
     }
   }
@@ -132,20 +136,20 @@ public class KafkaEventStoreIntegrationTest {
   @Disabled
   public void testBatchEventProducerConsumer() {
     // Create Producer
-    EventProducer<byte[]> producer = kafkaEventStore.createProducer(TEST_TOPIC_2,
-        getEventProducerConfig(TEST_TOPIC_2));
+    EventProducer<byte[], byte[]> producer =
+        kafkaEventStore.createProducer(TEST_TOPIC_2, getEventProducerConfig(TEST_TOPIC_2));
     // Create Consumer
-    EventConsumer<byte[]> consumer = kafkaEventStore.createConsumer(TEST_TOPIC_2,
-        getEventConsumerConfig(TEST_TOPIC_2));
+    EventConsumer<byte[], byte[]> consumer =
+        kafkaEventStore.createConsumer(TEST_TOPIC_2, getEventConsumerConfig(TEST_TOPIC_2));
 
     int numMsgToProduce = 10;
     int batches = 10;
     List<String> producedMsg = new ArrayList<>();
     for (int j = 0; j < batches; j++) {
-      List<byte[]> batch = new ArrayList<>();
+      List<KeyValuePair<byte[], byte[]>> batch = new ArrayList<>();
       for (int i = 0; i < numMsgToProduce; i++) {
         String uuidStr = UUID.randomUUID().toString();
-        batch.add(uuidStr.getBytes());
+        batch.add(new KeyValuePair<>(uuidStr.getBytes(), uuidStr.getBytes()));
         producedMsg.add(uuidStr);
       }
       producer.batchSend(batch);
@@ -154,14 +158,15 @@ public class KafkaEventStoreIntegrationTest {
 
     int i = 0;
     while (i < numMsgToProduce * batches) {
-      Object[] recordsBytes = consumer.poll();
-      for (Object recordBytes : recordsBytes) {
-        String consumedStr = new String((byte[]) recordBytes);
+      List<KeyValuePair<byte[], byte[]>> records = consumer.poll();
+      for (KeyValuePair<byte[], byte[]> record : records) {
+        String key = new String(record.getKey());
+        String value = new String(record.getValue());
         String expected = producedMsg.get(i++);
-        LOGGER.debug("i: {}, actual = {}, expected = {}", i, consumedStr, expected);
-        Assertions.assertEquals(consumedStr, expected);
+        LOGGER.debug("i: {}, key = {}, value = {}, expected = {}", i, key, value, expected);
+        Assertions.assertEquals(key, expected);
+        Assertions.assertEquals(value, expected);
       }
     }
   }
-
 }

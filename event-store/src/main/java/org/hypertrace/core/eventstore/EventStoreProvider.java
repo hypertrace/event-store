@@ -27,14 +27,13 @@ public class EventStoreProvider {
 
     Class<? extends EventStore> clazz = registry.get(type.toLowerCase());
     try {
-      Constructor<? extends EventStore> constructor = clazz.getConstructor(new Class[]{});
-      EventStore instance = constructor.newInstance(new Object[]{});
+      Constructor<? extends EventStore> constructor = clazz.getConstructor(new Class[] {});
+      EventStore instance = constructor.newInstance(new Object[] {});
       instance.init(new EventStoreConfig(config));
       return instance;
     } catch (Exception e) {
       throw new IllegalArgumentException("Exception creating EventStore for type:" + type, e);
     }
-
   }
 
   /**
@@ -48,7 +47,5 @@ public class EventStoreProvider {
   public static boolean register(String type, Class<? extends EventStore> clazz) {
     registry.put(type.toLowerCase(), clazz);
     return true;
-
   }
-
 }
