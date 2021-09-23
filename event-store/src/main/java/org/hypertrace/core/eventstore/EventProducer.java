@@ -25,7 +25,7 @@ public interface EventProducer<K, V> {
    *
    * @param key message key
    * @param value message value/payload
-   * @param timestamp  time stamp to be used for the event
+   * @param timestamp time stamp to be used for the event
    */
   void send(K key, V value, long timestamp);
 
