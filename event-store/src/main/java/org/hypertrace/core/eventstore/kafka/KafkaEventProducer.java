@@ -39,16 +39,13 @@ public class KafkaEventProducer<K, V> implements EventProducer<K, V> {
   }
 
   @Override
-  public void send(K key, V buffer) {
-    producer.send(new ProducerRecord<>(this.topic, key, buffer));
+  public void send(K key, V value) {
+    producer.send(new ProducerRecord<>(this.topic, key, value));
   }
 
-  /**
-   * @param buffer message payload
-   * @param timestamp record timestamp to set explicitly
-   */
-  public void send(K key, V buffer, long timestamp) {
-    producer.send(new ProducerRecord<>(this.topic, null, timestamp, key, buffer));
+  @Override
+  public void send(K key, V value, long timestamp) {
+    producer.send(new ProducerRecord<>(this.topic, null, timestamp, key, value));
   }
 
   @Override

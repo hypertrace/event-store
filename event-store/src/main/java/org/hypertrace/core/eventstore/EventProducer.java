@@ -15,17 +15,26 @@ public interface EventProducer<K, V> {
   /**
    * Sends data to underlying sink, async by default unless sync=true in the init configs.
    *
-   * @param key key
-   * @param event event
+   * @param key message key
+   * @param value message value/payload
    */
-  void send(K key, V event);
+  void send(K key, V value);
+
+  /**
+   * Sends data to underlying sink, async by default unless sync=true in the init configs.
+   *
+   * @param key message key
+   * @param value message value/payload
+   * @param timestamp  time stamp to be used for the event
+   */
+  void send(K key, V value, long timestamp);
 
   /**
    * Sends data to underlying sink, async by default unless sync=true in the init configs
    *
-   * @param eventsMap
+   * @param events list of events
    */
-  void batchSend(List<KeyValuePair<K, V>> eventsMap);
+  void batchSend(List<KeyValuePair<K, V>> events);
 
   /** flush everything in local buffer */
   void flush();
