@@ -2,15 +2,12 @@ package org.hypertrace.core.eventstore;
 
 import com.typesafe.config.Config;
 
-/**
- * Simple wrapper for now.
- */
+/** Simple wrapper for now. */
 public class EventProducerConfig {
 
   private Config config;
 
   private String storeType; // Kafka, File, HDFS etc
-
 
   public EventProducerConfig(String storeType, Config config) {
     this.storeType = storeType;
@@ -26,11 +23,8 @@ public class EventProducerConfig {
     return config;
   }
 
-  /**
-   * @return
-   */
+  /** @return */
   public String getType() {
     return storeType;
   }
-
 }

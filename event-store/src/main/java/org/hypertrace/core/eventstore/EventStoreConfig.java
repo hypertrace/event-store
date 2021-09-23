@@ -5,13 +5,12 @@ import com.typesafe.config.ConfigFactory;
 
 public class EventStoreConfig {
 
-  private final static String CONSUMER_CONFIG_PREFIX = "consumer";
-  private final static String PRODUCER_CONFIG_PREFIX = "producer";
+  private static final String CONSUMER_CONFIG_PREFIX = "consumer";
+  private static final String PRODUCER_CONFIG_PREFIX = "producer";
   private final Config config;
 
   public EventStoreConfig(Config config) {
     this.config = config;
-
   }
 
   public Config getStoreConfig() {

@@ -2,10 +2,8 @@ package org.hypertrace.core.eventstore;
 
 import java.util.List;
 
-/**
- * Simple interface to send events to any sink - Kafka, File, BigQuery, HDFS or any service
- */
-public interface EventProducer<T> {
+/** Simple interface to send events to any sink - Kafka, File, BigQuery, HDFS or any service */
+public interface EventProducer<K, V> {
 
   /**
    * Initialize a event producer with Sink properties
@@ -17,24 +15,20 @@ public interface EventProducer<T> {
   /**
    * Sends data to underlying sink, async by default unless sync=true in the init configs.
    *
+   * @param key key
    * @param event event
    */
-  void send(T event);
-
+  void send(K key, V event);
 
   /**
    * Sends data to underlying sink, async by default unless sync=true in the init configs
    *
-   * @param eventList
+   * @param eventsMap
    */
+  void batchSend(List<KeyValuePair<K, V>> eventsMap);
 
-  void batchSend(List<T> eventList);
-
-  /**
-   * flush everything in local buffer
-   */
+  /** flush everything in local buffer */
   void flush();
-
 
   // Close this data sink.
   void close();

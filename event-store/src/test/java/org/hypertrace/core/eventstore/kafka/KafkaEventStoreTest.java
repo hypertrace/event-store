@@ -10,6 +10,7 @@ import org.hypertrace.core.eventstore.EventProducer;
 import org.hypertrace.core.eventstore.EventProducerConfig;
 import org.hypertrace.core.eventstore.EventStore;
 import org.hypertrace.core.eventstore.EventStoreProvider;
+import org.hypertrace.core.eventstore.KeyValuePair;
 import org.junit.jupiter.api.Disabled;
 
 public class KafkaEventStoreTest {
@@ -20,27 +21,25 @@ public class KafkaEventStoreTest {
     EventStoreProvider.register(type, KafkaEventStore.class);
     Config config = ConfigFactory.empty();
 
-    //Initialize EventStore
+    // Initialize EventStore
     EventStore eventStore = EventStoreProvider.getEventStore(type, config);
     String topicName = "testTopic";
 
-    //Create Producer
+    // Create Producer
     EventProducerConfig producerConfig = new EventProducerConfig(type, ConfigFactory.empty());
-    EventProducer<byte[]> producer = eventStore.createProducer(topicName, producerConfig);
+    EventProducer<byte[], byte[]> producer = eventStore.createProducer(topicName, producerConfig);
 
-    //Send Events
-    producer.send(new byte[]{}); //single event
+    // Send Events
+    producer.send(new byte[] {}, new byte[] {}); // single event
 
-    List<byte[]> batchEvents = new ArrayList<byte[]>();
-    producer.batchSend(batchEvents); //batch message
+    List<KeyValuePair<byte[], byte[]>> batchEvents = new ArrayList<>();
+    producer.batchSend(batchEvents); // batch message
 
-    //Create Consumer
+    // Create Consumer
     EventConsumerConfig consumerConfig = new EventConsumerConfig(type, ConfigFactory.empty());
-    EventConsumer<byte[]> consumer = eventStore.createConsumer(topicName, consumerConfig);
+    EventConsumer<byte[], byte[]> consumer = eventStore.createConsumer(topicName, consumerConfig);
 
-    //Consume events
-    byte[][] events = consumer.poll();
-
-
+    // Consume events
+    List<KeyValuePair<byte[], byte[]>> events = consumer.poll();
   }
 }

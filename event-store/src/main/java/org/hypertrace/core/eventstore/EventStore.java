@@ -3,9 +3,7 @@ package org.hypertrace.core.eventstore;
 import com.typesafe.config.Config;
 import java.util.List;
 
-/**
- *
- */
+/** */
 public interface EventStore {
   /**
    * Initialize the event store
@@ -29,7 +27,7 @@ public interface EventStore {
    *
    * @param topicName
    * @return true if successful, we might have to return a Future here later since delete is not
-   * trivial
+   *     trivial
    */
   boolean deleteTopic(String topicName);
 
@@ -47,7 +45,8 @@ public interface EventStore {
    * @param config
    * @return
    */
-  <T extends Object> EventConsumer<T> createConsumer(String topicName, EventConsumerConfig config);
+  <K extends Object, V extends Object> EventConsumer<K, V> createConsumer(
+      String topicName, EventConsumerConfig config);
 
   /**
    * Creates a producer that can be used to send events in a streaming/batch fashion.
@@ -56,6 +55,6 @@ public interface EventStore {
    * @param config
    * @return
    */
-  <T extends Object> EventProducer<T> createProducer(String topicName, EventProducerConfig config);
-
+  <K extends Object, V extends Object> EventProducer<K, V> createProducer(
+      String topicName, EventProducerConfig config);
 }

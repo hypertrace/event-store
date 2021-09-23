@@ -26,9 +26,7 @@ import org.hypertrace.core.eventstore.EventStoreConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * KafkaEventStore implements storage on top of Kafka.
- */
+/** KafkaEventStore implements storage on top of Kafka. */
 public class KafkaEventStore implements EventStore {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(KafkaEventStore.class);
@@ -41,13 +39,15 @@ public class KafkaEventStore implements EventStore {
   public boolean init(EventStoreConfig eventstoreConfig) {
     this.storeConfig = eventstoreConfig;
     final Map<String, Object> config = new HashMap<>();
-    config.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG,
+    config.put(
+        AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG,
         eventstoreConfig.getStoreConfig().getString(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG));
-    config
-        .put(AdminClientConfig.CLIENT_ID_CONFIG, "KafkaEventStore-" + UUID.randomUUID().toString());
+    config.put(
+        AdminClientConfig.CLIENT_ID_CONFIG, "KafkaEventStore-" + UUID.randomUUID().toString());
 
     if (eventstoreConfig.getStoreConfig().hasPath(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG)) {
-      config.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG,
+      config.put(
+          AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG,
           eventstoreConfig.getStoreConfig().getString(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG));
     } else {
       config.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, requestTimeout);
@@ -111,24 +111,25 @@ public class KafkaEventStore implements EventStore {
   }
 
   @Override
-  public <T extends Object> EventConsumer<T> createConsumer(String name,
-                                                            EventConsumerConfig options) {
+  public <K extends Object, V extends Object> EventConsumer<K, V> createConsumer(
+      String name, EventConsumerConfig options) {
     KafkaEventConsumer consumer = new KafkaEventConsumer();
-    EventConsumerConfig consumerConfig = new EventConsumerConfig("Kafka",
-        this.storeConfig.getConsumerConfig().withFallback(options.getSourceConfig()));
+    EventConsumerConfig consumerConfig =
+        new EventConsumerConfig(
+            "Kafka", this.storeConfig.getConsumerConfig().withFallback(options.getSourceConfig()));
     consumer.init(consumerConfig);
     return consumer;
   }
 
   @Override
-  public <T extends Object> EventProducer<T> createProducer(String name,
-                                                            EventProducerConfig options) {
+  public <K extends Object, V extends Object> EventProducer<K, V> createProducer(
+      String name, EventProducerConfig options) {
     KafkaEventProducer producer = new KafkaEventProducer();
 
-    EventProducerConfig producerConfig = new EventProducerConfig("Kafka",
-        this.storeConfig.getProducerConfig().withFallback(options.getConfig()));
+    EventProducerConfig producerConfig =
+        new EventProducerConfig(
+            "Kafka", this.storeConfig.getProducerConfig().withFallback(options.getConfig()));
     producer.init(producerConfig);
     return producer;
   }
-
 }
