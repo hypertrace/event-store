@@ -16,7 +16,7 @@ tasks.test {
 
 dependencies {
   implementation("com.typesafe:config:1.3.2")
-  implementation("org.apache.kafka:kafka-clients:5.5.0-ccs") {
+  implementation("org.apache.kafka:kafka-clients:7.2.1-ccs") {
     exclude("org.slf4j", "slf4j-log4j12")
   }
   implementation("commons-io:commons-io:2.7")
