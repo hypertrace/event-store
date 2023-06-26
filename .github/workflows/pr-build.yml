@@ -24,5 +24,8 @@ jobs:
         with: 
           args: build
 
+  dependency-check:
+    runs-on: ubuntu-22.04
+    steps:
       - name: Dependency Check
-        run: ./gradlew dependencyCheckAggregate
+        uses: hypertrace/github-actions/dependency-check@main
