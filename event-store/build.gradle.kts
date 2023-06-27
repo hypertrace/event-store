@@ -16,9 +16,8 @@ tasks.test {
 
 dependencies {
   implementation("com.typesafe:config:1.3.2")
-  implementation("org.apache.kafka:kafka-clients:5.5.0-ccs") {
-    exclude("org.slf4j", "slf4j-log4j12")
-  }
+  implementation(platform("org.hypertrace.core.kafkastreams.framework:kafka-bom:0.2.10"))
+  implementation("org.apache.kafka:kafka-clients")
   implementation("commons-io:commons-io:2.7")
   implementation("org.slf4j:slf4j-api:1.7.30")
 
