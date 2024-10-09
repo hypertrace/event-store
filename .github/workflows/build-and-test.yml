@@ -8,6 +8,20 @@ on:
   pull_request:
 
 jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      # Set fetch-depth: 0 to fetch commit history and tags for use in version calculation
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Build
+        uses: hypertrace/github-actions/gradle@main
+        with:
+          args: build
+
   test:
     runs-on: ubuntu-22.04
     steps:
