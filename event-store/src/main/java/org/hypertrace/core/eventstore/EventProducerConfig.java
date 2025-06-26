@@ -23,7 +23,9 @@ public class EventProducerConfig {
     return config;
   }
 
-  /** @return */
+  /**
+   * @return
+   */
   public String getType() {
     return storeType;
   }

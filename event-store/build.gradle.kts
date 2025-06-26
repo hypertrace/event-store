@@ -5,11 +5,6 @@ plugins {
   id("org.hypertrace.jacoco-report-plugin")
 }
 
-repositories {
-  // Need this to fetch confluent's kafka-clients dependency
-  maven("http://packages.confluent.io/maven")
-}
-
 tasks.test {
   useJUnitPlatform()
 }
