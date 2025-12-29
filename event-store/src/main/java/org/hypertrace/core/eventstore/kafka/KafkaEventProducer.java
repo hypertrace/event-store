@@ -13,6 +13,8 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.hypertrace.core.eventstore.EventProducer;
 import org.hypertrace.core.eventstore.EventProducerConfig;
 import org.hypertrace.core.eventstore.KeyValuePair;
+import org.hypertrace.core.eventstore.SendCallback;
+import org.hypertrace.core.eventstore.SendResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +48,38 @@ public class KafkaEventProducer<K, V> implements EventProducer<K, V> {
   @Override
   public void send(K key, V value, long timestamp) {
     producer.send(new ProducerRecord<>(this.topic, null, timestamp, key, value));
+  }
+
+  @Override
+  public void send(K key, V value, SendCallback callback) {
+    producer.send(
+        new ProducerRecord<>(this.topic, key, value),
+        (metadata, exception) ->
+            callback.onCompletion(
+                exception == null
+                    ? new SendResult(
+                        metadata.topic(),
+                        metadata.partition(),
+                        metadata.offset(),
+                        metadata.timestamp())
+                    : null,
+                exception));
+  }
+
+  @Override
+  public void send(K key, V value, long timestamp, SendCallback callback) {
+    producer.send(
+        new ProducerRecord<>(this.topic, null, timestamp, key, value),
+        (metadata, exception) ->
+            callback.onCompletion(
+                exception == null
+                    ? new SendResult(
+                        metadata.topic(),
+                        metadata.partition(),
+                        metadata.offset(),
+                        metadata.timestamp())
+                    : null,
+                exception));
   }
 
   @Override

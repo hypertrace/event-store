@@ -30,6 +30,25 @@ public interface EventProducer<K, V> {
   void send(K key, V value, long timestamp);
 
   /**
+   * Sends data to underlying sink asynchronously with a callback to handle completion or errors.
+   *
+   * @param key message key
+   * @param value message value/payload
+   * @param callback callback to be invoked when the send completes or fails
+   */
+  void send(K key, V value, SendCallback callback);
+
+  /**
+   * Sends data to underlying sink asynchronously with a callback to handle completion or errors.
+   *
+   * @param key message key
+   * @param value message value/payload
+   * @param timestamp time stamp to be used for the event
+   * @param callback callback to be invoked when the send completes or fails
+   */
+  void send(K key, V value, long timestamp, SendCallback callback);
+
+  /**
    * Sends data to underlying sink, async by default unless sync=true in the init configs
    *
    * @param events list of events
