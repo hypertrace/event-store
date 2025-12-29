@@ -15,4 +15,3 @@ public interface SendCallback {
    */
   void onCompletion(SendResult result, Exception exception);
 }
-
